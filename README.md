@@ -81,10 +81,10 @@ To check how good the models are, I did the following:
 
 | Metric (test set) | Value |
 |---|---|
-| Accuracy | _write your number here_ |
-| Precision | _write your number here_ |
-| Recall | _write your number here_ |
-| F1-score | _write your number here_ |
+| Accuracy | 0.81 |
+| Precision |0.65 |
+| Recall | 0.23 |
+| F1-score | 0.33 |
 
 ## 6. Deployment
 
