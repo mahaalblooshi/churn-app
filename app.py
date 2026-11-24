@@ -2,10 +2,6 @@
 import streamlit as st
 import joblib
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import plotly.express as px
-import numpy as np
 
 classifier = joblib.load('churn_model.pkl')
 
