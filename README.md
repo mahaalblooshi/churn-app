@@ -77,14 +77,18 @@ To check how good the models are, I did the following:
 - I used **GridSearchCV** to try different settings: `n_estimators` of 50, 100 and 200, and `max_depth` of 3, 5 and 7.
 - I trained the final Random Forest with `n_estimators=100` and `max_depth=5` and checked it again on the test set.
 
-**My results:**
+**My results on the test set** (threshold 0.5, churn class):
 
-| Metric (test set) | Value |
-|---|---|
-| Accuracy | 0.81 |
-| Precision |0.65 |
-| Recall | 0.23 |
-| F1-score | 0.33 |
+| Model | Accuracy | Precision | Recall | F1-score |
+|---|---|---|---|---|
+| Logistic Regression | 0.81 | 0.65 | 0.23 | 0.33 |
+| K-Nearest Neighbors | 0.78 | 0.47 | 0.26 | 0.33 |
+| Decision Tree | 0.80 | 0.61 | 0.20 | 0.30 |
+| **Random Forest (final)** | 0.79 | 0.79 | 0.06 | 0.11 |
+
+**What these numbers mean:** only about 21% of customers churn. A model that always says "will not churn" would already get about 79% accuracy, so accuracy alone is not a good measure here. Recall (how many real churners the model finds) is more important.
+
+At the default threshold of 0.5 the Random Forest finds very few churners (recall 0.06), because its churn probabilities are usually below 0.5. To fix this in the app, I added a **churn threshold** slider. When the threshold is lower, the model flags more customers, so recall goes up and precision goes down. The *Model performance* page shows this trade-off live.
 
 ## 6. Deployment
 
@@ -99,12 +103,42 @@ The pipeline does this:
 
 I trained the pipeline, tested it, and saved it as **`churn_model.pkl`** using `joblib`. Then I loaded it again and tested one example customer to make sure it works.
 
+I also saved the test-set results of all four models to **`test_predictions.csv`**. The file has the real answer (`y_true`) and each model's churn probability for every test customer. The app uses it to draw the performance charts without needing the full dataset.
+
 ### 6.2 Making the Streamlit app (`app.py`)
 
-The app does these things:
-- Loads `churn_model.pkl`
-- Shows boxes, sliders and dropdowns for the 12 customer details
-- When you click **Predict Churn**, it shows **Will Churn** or **Will Not Churn**
+The app loads `churn_model.pkl` and has a **sidebar** and **four tabs**.
+
+**Sidebar**
+- **Churn threshold** slider: customers with a churn probability at or above this value are marked as **High** risk. It also changes the numbers on the *Model performance* tab.
+- Shows the risk bands: Low < half the threshold ≤ Medium < threshold ≤ High
+
+**🔮 Predict**
+- Boxes, sliders and dropdowns for the 12 customer details
+- **Quick examples** ("Loyal customer" and "At-risk customer") to fill the form in one click
+- When you click **Predict Churn**, it shows:
+  - **Will Churn** or **Will Not Churn**
+  - The churn **probability** (for example 73%) with a gauge chart
+  - The **risk level** (Low, Medium or High)
+  - **Suggested actions**, for example "send a 'we miss you' discount". These come from simple business rules, not from the model.
+
+**📈 Model performance**
+- Recall, precision, accuracy and F1-score at the chosen threshold
+- **Confusion matrix**: how many customers the model got right and wrong
+- **ROC curve** with the AUC score
+- **Feature importance**: which customer details matter most to the model
+- **Recall vs precision by threshold**: how moving the threshold changes the results
+- **Model comparison** table for all four models, with the best value in each column highlighted
+
+**🕘 History**
+- Every prediction is saved automatically with the time
+- Shows the number of predictions, how many are high risk, and the average churn probability
+- A bar chart of the churn probability of each prediction
+- Download the history as a CSV file, or clear it
+- The history is only kept while the page is open. Refreshing the page clears it.
+
+**ℹ️ About**
+- Explains the project and how to use the app
 
 To run it on your own computer:
 
@@ -125,10 +159,11 @@ python -m streamlit run app.py
 ### 6.4 Putting the app online
 
 1. I made a public GitHub repository called `churn-app`.
-2. I uploaded `app.py`, `churn_model.pkl` and `requirements.txt`. I did not upload the dataset.
+2. I uploaded `app.py`, `churn_model.pkl`, `test_predictions.csv` and `requirements.txt`. I did not upload the dataset.
 3. I put the same scikit-learn version in `requirements.txt` that I used to train the model, so the model loads without errors.
 4. I connected the repository on **Streamlit Community Cloud**, chose `app.py` as the main file and Python 3.12.
 5. I clicked Deploy, and now the app is public at the link at the top of this file.
+6. When I change a file on GitHub, Streamlit Community Cloud updates the app automatically.
 
 ## Project files
 
@@ -136,7 +171,8 @@ python -m streamlit run app.py
 churn-app/
 ├── app.py              # the Streamlit web app
 ├── churn_model.pkl     # the saved pipeline (data prep + Random Forest)
-├── requirements.txt    # the libraries the app needs
+├── test_predictions.csv # test-set answers and probabilities for the performance page
+├── requirements.txt    # the libraries the app needs (streamlit, pandas, joblib, scikit-learn, plotly)
 └── README.md           # this file
 ```
 
@@ -148,8 +184,11 @@ Python, pandas, NumPy, scikit-learn, Matplotlib, Seaborn, Plotly, joblib, Stream
 
 ## What I could improve
 
-- Show the churn **probability** (like "73% risk") and not only yes or no.
-- Try other models, like gradient boosting.
-- Show which features matter most for churn.
-- Retrain the model when new customer data comes in.
+Already done in the app: showing the churn probability, the risk level, and which features matter most.
 
+Still to do:
+- **Improve recall:** train the Random Forest with `class_weight='balanced'` so it finds more churners.
+- **Clean the membership levels:** the data has the same level written in different ways (`Basic` and `basic`, `Silver` and `SILVER`). Making them all the same before training would help.
+- Try other models, like gradient boosting.
+- Save the prediction history in a database so it is not lost when the page is refreshed.
+- Retrain the model when new customer data comes in.
