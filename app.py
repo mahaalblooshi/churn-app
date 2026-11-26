@@ -69,7 +69,7 @@ DEFAULTS = {
     "Website_Visits_Last_30_Days": 0, "App_Sessions_Last_30_Days": 0,
     "Total_Spend_AED": 0.0, "Complaint_Flag": 0, "Cart_Abandonment_Rate": 0.0,
     "Support_Tickets_Last_90_Days": 0, "Email_Open_Rate": 0.0,
-    "Membership_Level": "Bronze", "Subscription_Status": "Yes",
+    "Membership_Level": "Basic", "Subscription_Status": "Yes",
     "Returns_Last_90_Days": 0,
 }
 
@@ -88,7 +88,7 @@ PRESETS = {
         "Website_Visits_Last_30_Days": 1, "App_Sessions_Last_30_Days": 0,
         "Total_Spend_AED": 50.0, "Complaint_Flag": 1, "Cart_Abandonment_Rate": 0.90,
         "Support_Tickets_Last_90_Days": 4, "Email_Open_Rate": 0.05,
-        "Membership_Level": "Bronze", "Subscription_Status": "No",
+        "Membership_Level": "Basic", "Subscription_Status": "No",
         "Returns_Last_90_Days": 3,
     },
 }
@@ -223,7 +223,7 @@ def predict_tab():
     Email_Open_Rate = st.slider("Email Open Rate", 0.0, 1.0, step=0.01,
                                 key="Email_Open_Rate")
     Membership_Level = st.selectbox("Membership Level",
-                                    ['Bronze', 'Silver', 'Gold', 'Platinum'],
+                                    ['Basic', 'Silver', 'Gold', 'Platinum'],
                                     key="Membership_Level")
     Subscription_Status = st.selectbox("Subscription Status", ['Yes', 'No'],
                                        key="Subscription_Status")
